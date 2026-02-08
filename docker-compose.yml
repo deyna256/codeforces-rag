@@ -7,9 +7,12 @@ services:
     volumes:
       - ./rag/src:/app/src
     depends_on:
-      - postgres
-      - qdrant
-      - parser
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      parser:
+        condition: service_healthy
 
   parser:
     build: ./parser
@@ -19,13 +22,25 @@ services:
     volumes:
       - ./parser/src:/app
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/schema/openapi.json"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
 
   redis:
     image: redis:7-alpine
     volumes:
       - ./.volumes/redis:/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   qdrant:
     image: qdrant/qdrant:latest
@@ -33,6 +48,11 @@ services:
       - "6333:6333"
     volumes:
       - ./.volumes/qdrant:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/6333'"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   postgres:
     image: postgres:16
@@ -41,3 +61,8 @@ services:
     env_file: envs/.env.postgres
     volumes:
       - ./.volumes/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codeforces -d codeforces"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
