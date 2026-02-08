@@ -42,14 +42,6 @@ class APIClientProtocol(Protocol):
         ...
 
 
-class HTTPClientProtocol(Protocol):
-    """Protocol for HTTP client."""
-
-    async def get_text(self, url: str) -> str:
-        """Get text content from URL."""
-        ...
-
-
 class ContestPageParserProtocol(Protocol):
     """Protocol for parsing contest pages."""
 
