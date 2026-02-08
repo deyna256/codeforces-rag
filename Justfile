@@ -1,23 +1,36 @@
-up:
-    docker compose up -d
+# List available commands
+default:
+    @just --list
 
+# Build and start all services
+up:
+    docker compose up -d --build
+
+# Stop all services
 down:
     docker compose down
 
-rag-sync:
-    cd rag && uv sync
-
-rag-run:
-    cd rag && uv run uvicorn src.api:app --reload
-
-health:
-    curl -s localhost:8000/health | python -m json.tool
-
-start: up rag-sync rag-run
-
+# Stop services and remove volumes
 clean:
     docker compose down
     rm -rf .volumes
 
-nuke: clean
-    rm -rf rag/.venv rag/uv.lock rag/src/__pycache__
+# Run all tests
+test:
+    cd parser && uv run pytest
+    cd rag && uv run pytest
+
+# Check code style (ruff check)
+style:
+    cd parser && uv run ruff check .
+    cd rag && uv run ruff check .
+
+# Type checking (ty)
+type:
+    cd parser && uv run ty check
+    cd rag && uv run ty check
+
+# Format code (ruff format)
+format:
+    cd parser && uv run ruff format .
+    cd rag && uv run ruff format .
