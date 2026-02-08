@@ -12,6 +12,15 @@ dependencies = [
     "pydantic-settings",
 ]
 
+[dependency-groups]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.0",
+    "ty>=0.0.10",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
 
