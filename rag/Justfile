@@ -1,0 +1,14 @@
+sync:
+    uv sync
+
+run:
+    uv run uvicorn src.api:app --reload
+
+serve port="8000":
+    uv run uvicorn src.api:app --reload --port {{port}}
+
+health:
+    curl -s localhost:8000/health | python -m json.tool
+
+nuke-local:
+    rm -rf .venv uv.lock src/__pycache__
