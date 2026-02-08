@@ -815,13 +815,12 @@ Return JSON with contest_id, problem_id, start_marker, and end_marker for each p
         self, result: dict, primary_contest_id: str, editorial_text: str | None = None
     ) -> dict[tuple[str, str], str]:
         """Process parsed JSON result and return formatted dict."""
-        # Try new format first
         if "problems" in result and isinstance(result["problems"], list):
             return self._parse_new_format(result["problems"], editorial_text)
 
-        # Fallback to old format
-        logger.warning("LLM returned old format (no contest_id), using fallback")
-        return self._parse_old_format(result, primary_contest_id)
+        raise LLMSegmentationError(
+            primary_contest_id, f"LLM returned unexpected format (missing 'problems' key): {result}"
+        )
 
     def _extract_text_between_markers(self, text: str, start_marker: str, end_marker: str) -> str:
         """
@@ -863,10 +862,9 @@ Return JSON with contest_id, problem_id, start_marker, and end_marker for each p
         self, problems: list, editorial_text: str | None = None
     ) -> dict[tuple[str, str], str]:
         """
-        Parse new format with markers and extract text.
+        Parse format with markers and extract text.
 
-        New format: [{"contest_id": "1900", "problem_id": "A", "start_marker": "...", "end_marker": "..."}]
-        Old format (fallback): [{"contest_id": "1900", "problem_id": "A", "analysis": "..."}]
+        Format: [{"contest_id": "1900", "problem_id": "A", "start_marker": "...", "end_marker": "..."}]
         """
         clean_result = {}
         for item in problems:
@@ -876,40 +874,18 @@ Return JSON with contest_id, problem_id, start_marker, and end_marker for each p
             contest_id = str(item.get("contest_id", "")).strip()
             problem_id = self._normalize_problem_id(item.get("problem_id", ""))
 
-            # Check if this is new marker-based format
-            if "start_marker" in item and editorial_text:
-                start_marker = item.get("start_marker", "").strip()
-                end_marker = item.get("end_marker", "").strip()
+            if not contest_id or not problem_id:
+                continue
 
-                if contest_id and problem_id and start_marker:
-                    # Extract text between markers
-                    analysis = self._extract_text_between_markers(
-                        editorial_text, start_marker, end_marker
-                    )
-                    if analysis:
-                        key = (contest_id, problem_id)
-                        clean_result[key] = analysis
-            else:
-                # Old format fallback - analysis text is directly in JSON
-                analysis = item.get("analysis", "").strip()
-                if contest_id and problem_id and analysis:
-                    key = (contest_id, problem_id)
-                    clean_result[key] = analysis
+            start_marker = item.get("start_marker", "").strip()
+            end_marker = item.get("end_marker", "").strip()
+
+            if start_marker and editorial_text:
+                analysis = self._extract_text_between_markers(
+                    editorial_text, start_marker, end_marker
+                )
+                if analysis:
+                    clean_result[(contest_id, problem_id)] = analysis
 
         logger.info(f"Parsed {len(clean_result)} editorials with contest IDs")
-        return clean_result
-
-    def _parse_old_format(
-        self, result: dict, primary_contest_id: str
-    ) -> dict[tuple[str, str], str]:
-        """Parse old format: {"A": "...", "B": "..."}"""
-        clean_result = {}
-        for key, value in result.items():
-            if isinstance(value, str) and value.strip():
-                problem_id = self._normalize_problem_id(key)
-                if problem_id:
-                    # Use None for contest_id to signal fallback matching
-                    clean_result[(None, problem_id)] = value.strip()
-
-        logger.warning(f"Parsed {len(clean_result)} editorials without contest IDs (old format)")
         return clean_result

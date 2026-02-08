@@ -5,9 +5,9 @@ from dataclasses import dataclass
 class Editorial:
     """Editorial analysis for a specific problem."""
 
+    contest_id: str
     problem_id: str
     analysis_text: str
-    contest_id: str | None = None  # Contest ID for disambiguation in multi-contest editorials
 
 
 @dataclass

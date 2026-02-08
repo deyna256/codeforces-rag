@@ -104,26 +104,13 @@ class ContestService:
                 # Create explanation map with contest-aware filtering
                 explanation_map = {}
                 other_contest_count = 0
-                no_contest_id_count = 0
 
                 for edit in editorial_data.editorials:
                     problem_letter = edit.problem_id.upper()
 
-                    # Prefer exact contest_id match
                     if edit.contest_id == contest_id:
                         explanation_map[problem_letter] = edit.analysis_text
-
-                    # Fallback: if no contest_id, use letter-only matching (with warning)
-                    elif edit.contest_id is None and problem_letter not in explanation_map:
-                        logger.warning(
-                            f"Editorial for problem {problem_letter} has no contest_id, "
-                            f"using fallback matching (may be incorrect for multi-contest editorials)"
-                        )
-                        explanation_map[problem_letter] = edit.analysis_text
-                        no_contest_id_count += 1
-
-                    # Explicitly skip editorials from other contests
-                    elif edit.contest_id and edit.contest_id != contest_id:
+                    else:
                         logger.debug(
                             f"Skipping editorial {edit.contest_id}/{problem_letter} "
                             f"(requested: {contest_id})"
@@ -138,8 +125,7 @@ class ContestService:
                 logger.info(
                     f"Matched {matched_count}/{len(contest_problems)} problems with editorials "
                     f"(parsed {len(editorial_data.editorials)} total, "
-                    f"skipped {other_contest_count} from other contests, "
-                    f"{no_contest_id_count} without contest_id)"
+                    f"skipped {other_contest_count} from other contests)"
                 )
 
             except Exception as e:
