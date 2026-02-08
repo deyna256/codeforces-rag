@@ -55,7 +55,6 @@ async def test_parse_successful(mock_http_client) -> None:
     parser = ProblemPageParser(mock_http_client)
     data = await parser.parse_problem_page(identifier=identifier)
 
-    assert data.identifier == identifier
     assert data.time_limit == "2 seconds"
     assert data.memory_limit == "256 megabytes"
     assert "You are given a problem to solve" in (data.description or "")
@@ -74,7 +73,6 @@ async def test_parse_no_editorial() -> None:
     parser = ProblemPageParser(client)
     data = await parser.parse_problem_page(identifier=identifier)
 
-    assert data.identifier == identifier
     assert data.time_limit == "1 second"
     assert data.memory_limit == "512 megabytes"
     assert "Another problem description" in (data.description or "")

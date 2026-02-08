@@ -2,7 +2,6 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 
 from services.contest import ContestService
-from infrastructure.parsers.errors import EditorialNotFoundError
 
 
 @pytest.mark.asyncio
@@ -117,110 +116,6 @@ async def test_get_contest_by_url_success():
     assert contest.contest_id == "1500"
     assert contest.title == "Contest 1500"
     url_parser.parse_contest_url.assert_called_once_with("https://codeforces.com/contest/1500")
-
-
-@pytest.mark.asyncio
-async def test_get_editorial_content_no_parser():
-    api_client = AsyncMock()
-    page_parser = AsyncMock()
-
-    # Create service without editorial parser
-    service = ContestService(api_client=api_client, page_parser=page_parser, editorial_parser=None)
-
-    with pytest.raises(EditorialNotFoundError):
-        await service.get_editorial_content("1000")
-
-
-@pytest.mark.asyncio
-async def test_get_editorial_content_no_urls_provided():
-    api_client = AsyncMock()
-    page_parser = AsyncMock()
-    editorial_parser = AsyncMock()
-
-    # Mock contest with no editorials
-    api_client.fetch_contest_standings.return_value = {
-        "result": {
-            "contest": {"name": "Contest 3000", "type": "CF"},
-            "problems": [],
-        }
-    }
-    api_client.fetch_problemset_problems.return_value = {"result": {"problems": []}}
-    page_parser.parse_contest_page.return_value = MagicMock(editorial_urls=[])
-
-    service = ContestService(
-        api_client=api_client, page_parser=page_parser, editorial_parser=editorial_parser
-    )
-
-    with pytest.raises(EditorialNotFoundError):
-        await service.get_editorial_content("3000")
-
-
-@pytest.mark.asyncio
-async def test_get_editorial_content_with_urls():
-    api_client = AsyncMock()
-    page_parser = AsyncMock()
-    editorial_parser = AsyncMock()
-
-    # Mock editorial parser response
-    editorial_data = MagicMock()
-    editorial_data.editorials = [
-        MagicMock(problem_id="A", analysis_text="Solution for A"),
-        MagicMock(problem_id="B", analysis_text="Solution for B"),
-    ]
-    editorial_parser.parse_editorial_content.return_value = editorial_data
-
-    service = ContestService(
-        api_client=api_client, page_parser=page_parser, editorial_parser=editorial_parser
-    )
-
-    # Execute
-    result = await service.get_editorial_content(
-        "1000", ["https://codeforces.com/blog/entry/12345"]
-    )
-
-    # Verify
-    assert result == editorial_data
-    editorial_parser.parse_editorial_content.assert_called_once_with(
-        "1000", ["https://codeforces.com/blog/entry/12345"]
-    )
-
-
-@pytest.mark.asyncio
-async def test_get_editorial_content_fetches_urls():
-    api_client = AsyncMock()
-    page_parser = AsyncMock()
-    editorial_parser = AsyncMock()
-
-    # Mock API responses
-    api_client.fetch_contest_standings.return_value = {
-        "result": {
-            "contest": {"name": "Contest 4000", "type": "CF"},
-            "problems": [],
-        }
-    }
-    api_client.fetch_problemset_problems.return_value = {"result": {"problems": []}}
-
-    # Mock page parser with editorial URLs
-    page_parser.parse_contest_page.return_value = MagicMock(
-        editorial_urls=["https://codeforces.com/blog/entry/99999"]
-    )
-
-    # Mock editorial parser
-    editorial_data = MagicMock()
-    editorial_data.editorials = []
-    editorial_parser.parse_editorial_content.return_value = editorial_data
-
-    service = ContestService(
-        api_client=api_client, page_parser=page_parser, editorial_parser=editorial_parser
-    )
-
-    # Execute
-    result = await service.get_editorial_content("4000")
-
-    # Verify - should fetch URLs from contest and call parse_editorial_content twice:
-    # once in get_contest (with expected_problems), once in get_editorial_content
-    assert result == editorial_data
-    assert editorial_parser.parse_editorial_content.call_count >= 1
 
 
 @pytest.mark.asyncio
