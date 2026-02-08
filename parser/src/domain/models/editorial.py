@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import List
 
 
 @dataclass
@@ -16,4 +15,4 @@ class ContestEditorial:
     """Complete editorial with all problem analyses for a contest."""
 
     contest_id: str
-    editorials: List[Editorial]
+    editorials: list[Editorial]

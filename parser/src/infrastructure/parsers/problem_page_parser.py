@@ -1,6 +1,8 @@
 """Parser for extracting problem data from HTML pages."""
 
-from typing import Optional, TYPE_CHECKING
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from bs4 import BeautifulSoup
 from loguru import logger
@@ -20,7 +22,7 @@ if TYPE_CHECKING:
 class ProblemPageParser(ProblemPageParserProtocol):
     """Parser for extracting data from Codeforces problem HTML pages."""
 
-    def __init__(self, http_client: Optional["AsyncHTTPClient"] = None):
+    def __init__(self, http_client: AsyncHTTPClient | None = None):
         """
         Initialize parser.
 
@@ -51,7 +53,6 @@ class ProblemPageParser(ProblemPageParserProtocol):
             memory_limit = extract_memory_limit(soup)
 
             problem_data = ProblemData(
-                identifier=identifier,
                 description=description,
                 time_limit=time_limit,
                 memory_limit=memory_limit,

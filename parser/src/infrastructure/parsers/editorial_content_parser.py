@@ -1,8 +1,9 @@
 """LLM-powered parser for editorial blog entries to extract problem-specific solutions."""
 
+from __future__ import annotations
+
 import json
 import re
-from typing import Dict, List, Optional
 
 from bs4 import BeautifulSoup
 from loguru import logger
@@ -23,8 +24,8 @@ class EditorialContentParser:
 
     def __init__(
         self,
-        http_client: Optional[AsyncHTTPClient] = None,
-        llm_client: Optional[OpenRouterClient] = None,
+        http_client: AsyncHTTPClient | None = None,
+        llm_client: OpenRouterClient | None = None,
     ):
         """
         Initialize editorial content parser.
@@ -39,8 +40,8 @@ class EditorialContentParser:
     async def parse_editorial_content(
         self,
         contest_id: str,
-        editorial_urls: List[str],
-        expected_problems: List[tuple[str, str]] | None = None,
+        editorial_urls: list[str],
+        expected_problems: list[tuple[str, str]] | None = None,
     ) -> ContestEditorial:
         """
         Parse editorial content and segment into individual problem solutions.
@@ -315,7 +316,7 @@ class EditorialContentParser:
 
         return text.strip()
 
-    async def _combine_editorial_content(self, content_list: List[str]) -> str:
+    async def _combine_editorial_content(self, content_list: list[str]) -> str:
         """
         Combine content from multiple editorial URLs.
 
@@ -336,8 +337,8 @@ class EditorialContentParser:
         return "\n\n".join(combined_parts)
 
     async def _segment_by_problems(
-        self, full_text: str, contest_id: str, expected_problems: List[tuple[str, str]] | None
-    ) -> Dict[tuple[str, str], str]:
+        self, full_text: str, contest_id: str, expected_problems: list[tuple[str, str]] | None
+    ) -> dict[tuple[str, str], str]:
         """
         Use LLM to segment editorial text into problem-specific solutions.
 
@@ -374,8 +375,8 @@ class EditorialContentParser:
             raise LLMSegmentationError(contest_id) from e
 
     async def _ask_llm_for_segmentation(
-        self, editorial_text: str, contest_id: str, expected_problems: List[tuple[str, str]] | None
-    ) -> Dict[tuple[str, str], str]:
+        self, editorial_text: str, contest_id: str, expected_problems: list[tuple[str, str]] | None
+    ) -> dict[tuple[str, str], str]:
         """
         Ask LLM to segment editorial text into problem solutions.
 
@@ -467,7 +468,7 @@ Return JSON with contest_id, problem_id, start_marker, and end_marker for each p
         # Parse response with fallback, passing original text for extraction
         return self._parse_llm_response(response, contest_id, expected_problems, editorial_text)
 
-    def _normalize_problem_id(self, problem_id: str) -> Optional[str]:
+    def _normalize_problem_id(self, problem_id: str) -> str | None:
         """
         Normalize problem ID to standard format (A, B, C, C1, C2, D1, D2, etc.).
 
@@ -527,7 +528,7 @@ Return JSON with contest_id, problem_id, start_marker, and end_marker for each p
 
         return None
 
-    def _format_expected_problems(self, expected_problems: List[tuple[str, str]] | None) -> str:
+    def _format_expected_problems(self, expected_problems: list[tuple[str, str]] | None) -> str:
         """Format expected problems list for LLM prompt."""
         if not expected_problems:
             return "Unknown (parse all problems found)"
@@ -689,9 +690,9 @@ Return JSON with contest_id, problem_id, start_marker, and end_marker for each p
         self,
         response: str,
         primary_contest_id: str,
-        expected_problems: List[tuple[str, str]] | None,
+        expected_problems: list[tuple[str, str]] | None,
         editorial_text: str | None = None,
-    ) -> Dict[tuple[str, str], str]:
+    ) -> dict[tuple[str, str], str]:
         """
         Parse LLM response with format detection and fallback.
 
@@ -812,7 +813,7 @@ Return JSON with contest_id, problem_id, start_marker, and end_marker for each p
 
     def _process_parsed_json(
         self, result: dict, primary_contest_id: str, editorial_text: str | None = None
-    ) -> Dict[tuple[str, str], str]:
+    ) -> dict[tuple[str, str], str]:
         """Process parsed JSON result and return formatted dict."""
         # Try new format first
         if "problems" in result and isinstance(result["problems"], list):
@@ -860,7 +861,7 @@ Return JSON with contest_id, problem_id, start_marker, and end_marker for each p
 
     def _parse_new_format(
         self, problems: list, editorial_text: str | None = None
-    ) -> Dict[tuple[str, str], str]:
+    ) -> dict[tuple[str, str], str]:
         """
         Parse new format with markers and extract text.
 
@@ -900,7 +901,7 @@ Return JSON with contest_id, problem_id, start_marker, and end_marker for each p
 
     def _parse_old_format(
         self, result: dict, primary_contest_id: str
-    ) -> Dict[tuple[str, str], str]:
+    ) -> dict[tuple[str, str], str]:
         """Parse old format: {"A": "...", "B": "..."}"""
         clean_result = {}
         for key, value in result.items():

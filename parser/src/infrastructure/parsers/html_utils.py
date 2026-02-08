@@ -1,11 +1,11 @@
 """Shared HTML parsing utilities for Codeforces pages."""
 
-from typing import Optional
+from __future__ import annotations
 
 from bs4 import BeautifulSoup
 
 
-def extract_time_limit(soup: BeautifulSoup) -> Optional[str]:
+def extract_time_limit(soup: BeautifulSoup) -> str | None:
     """Extract time limit from problem page."""
     try:
         problem_statement = soup.find("div", class_="problem-statement")
@@ -30,7 +30,7 @@ def extract_time_limit(soup: BeautifulSoup) -> Optional[str]:
         return None
 
 
-def extract_memory_limit(soup: BeautifulSoup) -> Optional[str]:
+def extract_memory_limit(soup: BeautifulSoup) -> str | None:
     """Extract memory limit from problem page."""
     try:
         problem_statement = soup.find("div", class_="problem-statement")
@@ -55,7 +55,7 @@ def extract_memory_limit(soup: BeautifulSoup) -> Optional[str]:
         return None
 
 
-def extract_description(soup: BeautifulSoup) -> Optional[str]:
+def extract_description(soup: BeautifulSoup) -> str | None:
     """Extract problem statement/description (without time/memory limits)."""
     try:
         # Find the problem statement block
