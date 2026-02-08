@@ -39,7 +39,12 @@ async def health():
     except Exception:
         pass
     status = "ok" if (pg_ok and qdrant_ok) else "degraded"
-    return {"status": status, "postgres": pg_ok, "qdrant": qdrant_ok, "qdrant_points": qdrant_points}
+    return {
+        "status": status,
+        "postgres": pg_ok,
+        "qdrant": qdrant_ok,
+        "qdrant_points": qdrant_points,
+    }
 
 
 @app.post("/contests/load")
