@@ -1,12 +1,13 @@
 """Parser for extracting contest data from HTML pages."""
 
-from typing import TYPE_CHECKING, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from bs4 import BeautifulSoup
 from loguru import logger
 
 from domain.models.parsing import ContestPageData, ProblemData
-from domain.models.identifiers import ProblemIdentifier
 
 from .interfaces import ParsingError
 from .llm_editorial_finder import LLMEditorialFinder
@@ -21,8 +22,8 @@ class ContestPageParser:
 
     def __init__(
         self,
-        http_client: Optional["AsyncHTTPClient"] = None,
-        llm_editorial_finder: Optional[LLMEditorialFinder] = None,
+        http_client: AsyncHTTPClient | None = None,
+        llm_editorial_finder: LLMEditorialFinder | None = None,
     ):
         """
         Initialize parser.
@@ -36,7 +37,7 @@ class ContestPageParser:
 
     async def parse_contest_page(self, contest_id: str) -> ContestPageData:
         """
-        Parse contest page and extract data (title, editorial URL).
+        Parse contest page and extract data (editorial URL).
         """
         from infrastructure.parsers import URLParser
         from domain.models.identifiers import ContestIdentifier
@@ -50,12 +51,10 @@ class ContestPageParser:
             html = await self.http_client.get_text(url)
             soup = BeautifulSoup(html, "lxml")
 
-            title = self._extract_contest_title(soup)
             editorial_urls = await self._extract_editorial_url(soup, contest_id)
 
             contest_data = ContestPageData(
                 contest_id=contest_id,
-                title=title,
                 editorial_urls=editorial_urls,
             )
 
@@ -82,13 +81,7 @@ class ContestPageParser:
             time_limit = extract_time_limit(soup)
             memory_limit = extract_memory_limit(soup)
 
-            identifier = ProblemIdentifier(
-                contest_id=contest_id,
-                problem_id=problem_id,
-            )
-
             problem_data = ProblemData(
-                identifier=identifier,
                 description=description,
                 time_limit=time_limit,
                 memory_limit=memory_limit,
@@ -98,23 +91,6 @@ class ContestPageParser:
 
         except Exception as e:
             raise ParsingError(f"Failed to parse problem page {url}: {e}") from e
-
-    def _extract_contest_title(self, soup: BeautifulSoup) -> Optional[str]:
-        """Extract contest title from contest page."""
-        try:
-            # Contest title is typically in the header with specific structure
-            # Look for contest name in the breadcrumbs or page title
-            title_tag = soup.find("title")
-            if title_tag:
-                title_text = title_tag.get_text(strip=True)
-                # Remove "- Codeforces" suffix if present
-                if " - Codeforces" in title_text:
-                    title_text = title_text.replace(" - Codeforces", "").strip()
-                return title_text
-
-            return None
-        except Exception:
-            return None
 
     async def _extract_editorial_url(self, soup: BeautifulSoup, contest_id: str) -> list[str]:
         """Extract editorial/tutorial URLs from contest page using LLM or fallback to regex."""

@@ -1,8 +1,6 @@
 """Configuration module for codeforces-editorial-finder."""
 
-import threading
 from pathlib import Path
-from typing import Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -20,18 +18,18 @@ class Settings(BaseSettings):
 
     # HTTP
     http_retries: int = Field(default=3, description="Number of HTTP retry attempts")
-    user_agent: Optional[str] = Field(
+    user_agent: str | None = Field(
         default=None, description="User agent for HTTP requests. If None, will use default app UA"
     )
 
     # Logging
     log_level: str = Field(default="INFO", description="Logging level")
-    log_file: Optional[str] = Field(
+    log_file: str | None = Field(
         default=None, description="Log file path (None for stdout only)"
     )
 
     # LLM (OpenRouter)
-    openrouter_api_key: Optional[str] = Field(
+    openrouter_api_key: str | None = Field(
         default=None, description="OpenRouter API key for LLM-based editorial detection"
     )
     openrouter_model: str = Field(
@@ -55,7 +53,7 @@ class Settings(BaseSettings):
 
     @field_validator("log_file")
     @classmethod
-    def expand_log_file(cls, v: Optional[str]) -> Optional[str]:
+    def expand_log_file(cls, v: str | None) -> str | None:
         """Expand ~ in log file path."""
         if v is None:
             return None
@@ -73,23 +71,12 @@ class Settings(BaseSettings):
 
 
 # Singleton instance
-_settings: Optional[Settings] = None
-_settings_lock = threading.Lock()
+_settings: Settings | None = None
 
 
 def get_settings() -> Settings:
     """Get or create settings singleton instance."""
     global _settings
     if _settings is None:
-        with _settings_lock:
-            if _settings is None:
-                _settings = Settings()
-    assert _settings is not None
+        _settings = Settings()
     return _settings
-
-
-def reset_settings() -> None:
-    """Reset settings singleton (useful for testing)."""
-    global _settings
-    with _settings_lock:
-        _settings = None

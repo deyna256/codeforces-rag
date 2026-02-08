@@ -5,7 +5,6 @@ import asyncio
 from loguru import logger
 
 from domain.models.contest import Contest, ContestProblem
-from domain.models.editorial import ContestEditorial
 from infrastructure.parsers import (
     ContestAPIClientProtocol,
     ContestPageParserProtocol,
@@ -232,46 +231,3 @@ class ContestService:
 
         return await self.get_contest(identifier.contest_id)
 
-    async def get_editorial_content(
-        self, contest_id: str, editorial_urls: list[str] | None = None
-    ) -> ContestEditorial:
-        """
-        Get editorial content for a contest, segmented by individual problems.
-
-        Args:
-            contest_id: Contest identifier
-            editorial_urls: Optional editorial URLs (will fetch from contest page if not provided)
-
-        Returns:
-            ContestEditorial with individual problem analyses
-
-        Raises:
-            EditorialNotFoundError: If no editorial URLs available
-        """
-        logger.debug(f"Getting editorial content for contest: {contest_id}")
-
-        if not self.editorial_parser:
-            from infrastructure.parsers.editorial_content_parser import EditorialNotFoundError
-
-            raise EditorialNotFoundError(contest_id)
-
-        # Get editorial URLs if not provided
-        if editorial_urls is None:
-            contest = await self.get_contest(contest_id)
-            editorial_urls = contest.editorials
-
-        if not editorial_urls:
-            from infrastructure.parsers.editorial_content_parser import EditorialNotFoundError
-
-            raise EditorialNotFoundError(contest_id)
-
-        # Parse editorial content
-        editorial_data = await self.editorial_parser.parse_editorial_content(
-            contest_id, editorial_urls
-        )
-
-        logger.info(
-            f"Successfully parsed editorial for contest {contest_id} with {len(editorial_data.editorials)} problems"
-        )
-
-        return editorial_data

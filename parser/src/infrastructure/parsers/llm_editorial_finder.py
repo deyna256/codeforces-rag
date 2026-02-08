@@ -1,7 +1,6 @@
 """LLM-based editorial URL finder for contest pages."""
 
 import json
-from typing import Optional
 
 from bs4 import BeautifulSoup
 from loguru import logger
@@ -12,7 +11,7 @@ from infrastructure.llm_client import LLMError, OpenRouterClient
 class LLMEditorialFinder:
     """Uses LLM to intelligently find editorial URLs from contest pages."""
 
-    def __init__(self, llm_client: Optional[OpenRouterClient] = None):
+    def __init__(self, llm_client: OpenRouterClient | None = None):
         """
         Initialize LLM editorial finder.
 
@@ -73,8 +72,6 @@ class LLMEditorialFinder:
             soup,  # Fallback to entire page
         ]
 
-        all_extracted_links = []
-
         for area in search_areas:
             if area is None:
                 continue
@@ -85,15 +82,7 @@ class LLMEditorialFinder:
                     continue
 
                 text = link.get_text(strip=True)
-                all_extracted_links.append(
-                    {
-                        "href": href,
-                        "text": text,
-                        "potential": self._is_potentially_editorial_link(href),
-                    }
-                )
 
-                # Skip non-blog links and common UI elements
                 if not self._is_potentially_editorial_link(href):
                     continue
 
@@ -211,12 +200,7 @@ Which links are editorials/tutorials? Return ALL editorial links if multiple exi
             # Parse JSON response
             result = json.loads(response)
 
-            # Support both new format {"urls": [...]} and old format {"url": "..."}
-            editorial_urls = result.get("urls")
-            if editorial_urls is None:
-                # Fall back to old format for backward compatibility
-                single_url = result.get("url")
-                editorial_urls = [single_url] if single_url else []
+            editorial_urls = result.get("urls", [])
 
             if editorial_urls:
                 logger.info(
