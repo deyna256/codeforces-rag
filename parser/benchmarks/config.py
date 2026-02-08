@@ -14,6 +14,8 @@ class ModelConfig(TypedDict):
     max_tokens_segmentation: int  # Higher token limit for segmentation tasks
 
 
+MAX_CONCURRENT = 5
+
 # Models to benchmark
 # Add or remove models as needed
 # TOP-6 models selected for faster benchmarking
@@ -142,12 +144,3 @@ MODELS_TO_BENCHMARK: list[ModelConfig] = [
 #     "max_tokens": 100,
 #     "max_tokens_segmentation": 6000,
 # },
-
-# Benchmark settings
-BENCHMARK_SETTINGS = {
-    "parallel_requests": 5,  # Number of contests to process in parallel
-    "runs_per_test": 1,  # Number of runs per test case to average results
-    "retry_on_failure": True,
-    "retry_attempts": 2,
-    "save_html_cache": True,  # Cache HTML to avoid re-fetching
-}

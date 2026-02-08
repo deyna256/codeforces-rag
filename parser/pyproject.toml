@@ -2,7 +2,7 @@
 name = "codeforces-editorial-finder"
 version = "0.1.0"
 description = "HTTP API to extract and format editorials for Codeforces problems"
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 license = {text = "MIT"}
 homepage = "https://github.com/deyna256/codeforces-editorial-finder"
 repository = "https://github.com/deyna256/codeforces-editorial-finder"
@@ -43,6 +43,7 @@ dev = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.1.0",
+    "promptum>=0.0.3",
     "ruff>=0.1.0",
     "ty>=0.0.10",
 ]
