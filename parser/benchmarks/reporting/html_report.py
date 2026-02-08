@@ -99,7 +99,9 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
                 found_text = ", ".join(test["found"]) if test["found"] else "None"
             elif "expected_problems" in test:
                 # SegmentationTestResult format
-                expected_text = ", ".join(test["expected_problems"]) if test["expected_problems"] else "None"
+                expected_text = (
+                    ", ".join(test["expected_problems"]) if test["expected_problems"] else "None"
+                )
                 found_text = ", ".join(test["found_problems"]) if test["found_problems"] else "None"
             else:
                 # Fallback

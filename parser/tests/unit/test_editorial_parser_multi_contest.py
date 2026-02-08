@@ -137,7 +137,7 @@ class TestMultiContestMatching:
         assert "\n" in analysis  # newline
         assert "\t" in analysis  # tab
         assert "\\" in analysis  # backslash
-        assert '"' in analysis   # quote
+        assert '"' in analysis  # quote
 
     def test_real_world_latex_error_from_logs(self, parser):
         """Test the exact error scenario from the production logs."""
