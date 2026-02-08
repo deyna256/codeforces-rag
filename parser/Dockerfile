@@ -25,15 +25,15 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
 
-ENV PATH="/app/.venv/bin:$PATH" \
-    VIRTUAL_ENV="/app/.venv" \
+ENV PATH="/.venv/bin:$PATH" \
+    VIRTUAL_ENV="/.venv" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app
 
 WORKDIR /app
 
-COPY --from=builder /app/.venv .venv
+COPY --from=builder /app/.venv /.venv
 COPY src/ .
 COPY entrypoints/ /entrypoints/
 RUN chmod +x /entrypoints/*.sh
