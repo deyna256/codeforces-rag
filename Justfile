@@ -12,7 +12,7 @@ down:
 
 # Stop services and remove volumes
 clean:
-    docker compose down
+    docker compose down --rmi local
     rm -rf .volumes
 
 # Run all tests
