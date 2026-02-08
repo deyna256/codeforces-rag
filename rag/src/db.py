@@ -81,6 +81,7 @@ def close_qdrant():
 
 
 async def upsert_problem(p: Problem):
+    assert pg_pool is not None
     async with pg_pool.acquire() as conn:
         await conn.execute(
             """
@@ -142,6 +143,7 @@ async def get_problems(
     query = f"SELECT problem_id, contest_id, name, rating, tags, url FROM problems{where} ORDER BY problem_id LIMIT ${idx}"
     args.append(limit)
 
+    assert pg_pool is not None
     async with pg_pool.acquire() as conn:
         rows = await conn.fetch(query, *args)
 
@@ -161,6 +163,7 @@ async def get_problems(
 async def get_problem_text(problem_id: str, field: str) -> dict | None:
     if field not in ("statement", "editorial"):
         return None
+    assert pg_pool is not None
     async with pg_pool.acquire() as conn:
         row = await conn.fetchrow(
             f"SELECT problem_id, name, {field} AS text FROM problems WHERE problem_id = $1",
@@ -190,6 +193,7 @@ def qdrant_upsert_chunks(chunks: list[Chunk], vectors: list[list[float]]):
         )
         for c, vec in zip(chunks, vectors)
     ]
+    assert qdrant is not None
     qdrant.upsert(collection_name=COLLECTION, points=points)
 
 
@@ -219,6 +223,7 @@ def qdrant_search(
 
     q_filter = Filter(must=must) if must else None
 
+    assert qdrant is not None
     hits = qdrant.query_points(
         collection_name=COLLECTION,
         query=vector,
@@ -230,6 +235,8 @@ def qdrant_search(
     results = []
     for h in hits:
         p = h.payload
+        if p is None:
+            continue
         results.append(
             {
                 "problem_id": p["problem_id"],

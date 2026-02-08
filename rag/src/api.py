@@ -27,15 +27,17 @@ async def health():
     qdrant_ok = False
     qdrant_points = 0
     try:
-        async with db.pg_pool.acquire() as conn:
-            await conn.fetchval("SELECT 1")
-        pg_ok = True
+        if db.pg_pool is not None:
+            async with db.pg_pool.acquire() as conn:
+                await conn.fetchval("SELECT 1")
+            pg_ok = True
     except Exception:
         pass
     try:
-        info = db.qdrant.get_collection(db.COLLECTION)
-        qdrant_ok = True
-        qdrant_points = info.points_count
+        if db.qdrant is not None:
+            info = db.qdrant.get_collection(db.COLLECTION)
+            qdrant_ok = True
+            qdrant_points = info.points_count
     except Exception:
         pass
     status = "ok" if (pg_ok and qdrant_ok) else "degraded"
