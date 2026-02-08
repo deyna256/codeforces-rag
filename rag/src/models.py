@@ -10,7 +10,7 @@ class ParserProblem(BaseModel):
     tags: list[str] = []
     time_limit: str = ""
     memory_limit: str = ""
-    explanation: str = ""
+    explanation: str | None = None
 
 
 class ParserResponse(BaseModel):
