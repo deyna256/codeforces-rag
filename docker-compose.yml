@@ -4,10 +4,8 @@ services:
     ports:
       - "8000:8000"
     env_file: envs/.env.rag
-    environment:
-      POSTGRES_URL: postgresql://codeforces:codeforces@postgres:5432/codeforces
-      QDRANT_URL: http://qdrant:6333
-      PARSER_BASE_URL: http://parser:8000
+    volumes:
+      - ./rag/src:/app/src
     depends_on:
       - postgres
       - qdrant
@@ -18,6 +16,8 @@ services:
     ports:
       - "8001:8000"
     env_file: envs/.env.parser
+    volumes:
+      - ./parser/src:/app
     depends_on:
       - redis
 
@@ -38,9 +38,6 @@ services:
     image: postgres:16
     ports:
       - "5432:5432"
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-codeforces}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-codeforces}
-      POSTGRES_DB: ${POSTGRES_DB:-codeforces}
+    env_file: envs/.env.postgres
     volumes:
       - ./.volumes/postgres:/var/lib/postgresql/data
