@@ -3,7 +3,7 @@ services:
     build: ./rag
     ports:
       - "8000:8000"
-    env_file: .env
+    env_file: envs/.env.rag
     environment:
       POSTGRES_URL: postgresql://codeforces:codeforces@postgres:5432/codeforces
       QDRANT_URL: http://qdrant:6333
@@ -17,6 +17,15 @@ services:
     build: ./parser
     ports:
       - "8001:8000"
+    env_file: envs/.env.parser
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - ./.volumes/redis:/data
+    restart: unless-stopped
 
   qdrant:
     image: qdrant/qdrant:latest
