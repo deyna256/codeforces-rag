@@ -1,2 +1,4 @@
 CLAUDE.md
 .volumes/
+envs/.env.*
+!envs/.env.*.example
