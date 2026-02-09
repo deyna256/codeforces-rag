@@ -11,7 +11,6 @@ from .interfaces import (
     ContestPageParserProtocol,
     ParsingError,
     ProblemPageParserProtocol,
-    URLParserProtocol,
 )
 
 __all__ = [
@@ -25,6 +24,5 @@ __all__ = [
     "ProblemPageParser",
     "ProblemPageParserProtocol",
     "URLParser",
-    "URLParserProtocol",
     "URLParsingError",
 ]

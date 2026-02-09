@@ -2,22 +2,9 @@
 
 from typing import Protocol
 
-from domain.models import ContestPageData, ProblemData, ProblemIdentifier
+from domain.models.identifiers import ProblemIdentifier
+from domain.models.parsing import ContestPageData, ProblemData
 from domain.models.problem import Problem
-
-
-class URLParserProtocol(Protocol):
-    """Protocol for URL parsing."""
-
-    @classmethod
-    def parse(cls, url: str) -> ProblemIdentifier:
-        """Parse URL to extract problem identifier."""
-        ...
-
-    @classmethod
-    def build_problem_url(cls, identifier: ProblemIdentifier) -> str:
-        """Build problem URL from identifier."""
-        ...
 
 
 class ProblemPageParserProtocol(Protocol):

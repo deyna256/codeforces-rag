@@ -6,7 +6,6 @@ from urllib.parse import urlparse
 from loguru import logger
 
 from domain.models.identifiers import ContestIdentifier, ProblemIdentifier
-from .interfaces import URLParserProtocol
 
 
 class URLParsingError(ValueError):
@@ -15,7 +14,7 @@ class URLParsingError(ValueError):
     pass
 
 
-class URLParser(URLParserProtocol):
+class URLParser:
     """Parser for various Codeforces URL formats."""
 
     # Unified pattern matches: problemset/problem/1234/A
