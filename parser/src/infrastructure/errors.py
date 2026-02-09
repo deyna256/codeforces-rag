@@ -23,9 +23,3 @@ class ContestNotFoundError(CodeforcesEditorialError):
     """Contest not found (404) or inaccessible."""
 
     pass
-
-
-class CacheError(CodeforcesEditorialError):
-    """Cache operation error."""
-
-    pass

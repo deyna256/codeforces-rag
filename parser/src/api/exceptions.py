@@ -8,7 +8,6 @@ from litestar.status_codes import (
 from loguru import logger
 
 from infrastructure.errors import (
-    CacheError,
     CodeforcesEditorialError,
     ContestNotFoundError,
 )
@@ -33,12 +32,6 @@ def exception_to_http_response(request: Request, exc: Exception) -> Response[Err
         status_code = HTTP_422_UNPROCESSABLE_ENTITY
         error_type = "ParsingError"
         detail = str(exc)
-
-    elif isinstance(exc, CacheError):
-        logger.warning(f"Cache error (non-fatal): {exc}")
-        status_code = HTTP_500_INTERNAL_SERVER_ERROR
-        error_type = "CacheError"
-        detail = "Internal cache error occurred"
 
     elif isinstance(exc, CodeforcesEditorialError):
         status_code = HTTP_500_INTERNAL_SERVER_ERROR

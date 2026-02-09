@@ -7,13 +7,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
-    # Cache
-    cache_ttl_hours: int = Field(
-        default=168,  # 7 days
-        description="Cache TTL in hours",
-    )
-    redis_url: str = Field(default="redis://localhost:6379/0", description="Redis connection URL")
-
     # HTTP
     http_retries: int = Field(default=3, description="Number of HTTP retry attempts")
 

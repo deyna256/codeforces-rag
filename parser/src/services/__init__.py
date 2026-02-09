@@ -1,4 +1,3 @@
-from services.cache import clear_cache
 from services.contest import ContestService
 from services.problem import ProblemService
 
@@ -62,7 +61,6 @@ def create_contest_service() -> ContestService:
 
 
 __all__ = [
-    "clear_cache",
     "ContestService",
     "create_contest_service",
     "create_problem_service",
