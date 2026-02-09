@@ -1,7 +1,5 @@
 """Configuration module for codeforces-editorial-finder."""
 
-from pathlib import Path
-
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -18,15 +16,9 @@ class Settings(BaseSettings):
 
     # HTTP
     http_retries: int = Field(default=3, description="Number of HTTP retry attempts")
-    user_agent: str | None = Field(
-        default=None, description="User agent for HTTP requests. If None, will use default app UA"
-    )
 
     # Logging
     log_level: str = Field(default="INFO", description="Logging level")
-    log_file: str | None = Field(
-        default=None, description="Log file path (None for stdout only)"
-    )
 
     # LLM (OpenRouter)
     openrouter_api_key: str | None = Field(
@@ -50,14 +42,6 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=False,
     )
-
-    @field_validator("log_file")
-    @classmethod
-    def expand_log_file(cls, v: str | None) -> str | None:
-        """Expand ~ in log file path."""
-        if v is None:
-            return None
-        return str(Path(v).expanduser())
 
     @field_validator("log_level")
     @classmethod
