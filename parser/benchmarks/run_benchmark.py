@@ -113,7 +113,10 @@ async def main():
 
             # Generate JSON report
             json_path, report_data = generate_comparison_report(
-                model_reports, display_names, results_dir, benchmark_type,
+                model_reports,
+                display_names,
+                results_dir,
+                benchmark_type,
             )
             logger.info(f"Saved JSON report: {json_path}")
 

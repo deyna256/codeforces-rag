@@ -73,9 +73,7 @@ class ProblemSegmentationValidator:
                 for cid, pid, should_exist in self.expected_problems
             }
             return False, {
-                "expected_problems": [
-                    f"{cid}/{pid}" for cid, pid, _ in self.expected_problems
-                ],
+                "expected_problems": [f"{cid}/{pid}" for cid, pid, _ in self.expected_problems],
                 "found_problems": [],
                 "problem_accuracy": accuracy,
             }
@@ -98,16 +96,13 @@ class ProblemSegmentationValidator:
 
         passed = all(accuracy.values()) if accuracy else True
         return passed, {
-            "expected_problems": [
-                f"{cid}/{pid}" for cid, pid, _ in self.expected_problems
-            ],
+            "expected_problems": [f"{cid}/{pid}" for cid, pid, _ in self.expected_problems],
             "found_problems": found_list,
             "problem_accuracy": accuracy,
         }
 
     def describe(self) -> str:
         parts = [
-            f"{cid}/{pid}={'present' if s else 'absent'}"
-            for cid, pid, s in self.expected_problems
+            f"{cid}/{pid}={'present' if s else 'absent'}" for cid, pid, s in self.expected_problems
         ]
         return f"Expects problems: {', '.join(parts)}"

@@ -56,17 +56,13 @@ def generate_comparison_report(
         f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
 
         # Cost per correct prediction
-        cost_per_correct = (
-            (summary.total_cost_usd / summary.passed) if summary.passed > 0 else 0.0
-        )
+        cost_per_correct = (summary.total_cost_usd / summary.passed) if summary.passed > 0 else 0.0
 
         # Token averages
         avg_tokens = summary.total_tokens / summary.total if summary.total > 0 else 0.0
 
         # Collect per-result prompt/completion tokens
-        total_prompt = sum(
-            (r.metrics.prompt_tokens or 0) for r in report.results if r.metrics
-        )
+        total_prompt = sum((r.metrics.prompt_tokens or 0) for r in report.results if r.metrics)
         total_completion = sum(
             (r.metrics.completion_tokens or 0) for r in report.results if r.metrics
         )
@@ -102,30 +98,34 @@ def generate_comparison_report(
             total_tokens = (r.metrics.total_tokens or 0) if r.metrics else 0
 
             if benchmark_type == "editorial_finder":
-                test_results.append({
-                    "contest_id": contest_id,
-                    "expected": details.get("expected", []),
-                    "found": details.get("found", []),
-                    "correct": r.passed,
-                    "latency_ms": round(latency, 2),
-                    "prompt_tokens": prompt_tokens,
-                    "completion_tokens": completion_tokens,
-                    "total_tokens": total_tokens,
-                    "error": r.execution_error,
-                })
+                test_results.append(
+                    {
+                        "contest_id": contest_id,
+                        "expected": details.get("expected", []),
+                        "found": details.get("found", []),
+                        "correct": r.passed,
+                        "latency_ms": round(latency, 2),
+                        "prompt_tokens": prompt_tokens,
+                        "completion_tokens": completion_tokens,
+                        "total_tokens": total_tokens,
+                        "error": r.execution_error,
+                    }
+                )
             else:
-                test_results.append({
-                    "contest_id": contest_id,
-                    "expected_problems": details.get("expected_problems", []),
-                    "found_problems": details.get("found_problems", []),
-                    "problem_accuracy": details.get("problem_accuracy", {}),
-                    "correct": r.passed,
-                    "latency_ms": round(latency, 2),
-                    "prompt_tokens": prompt_tokens,
-                    "completion_tokens": completion_tokens,
-                    "total_tokens": total_tokens,
-                    "error": r.execution_error,
-                })
+                test_results.append(
+                    {
+                        "contest_id": contest_id,
+                        "expected_problems": details.get("expected_problems", []),
+                        "found_problems": details.get("found_problems", []),
+                        "problem_accuracy": details.get("problem_accuracy", {}),
+                        "correct": r.passed,
+                        "latency_ms": round(latency, 2),
+                        "prompt_tokens": prompt_tokens,
+                        "completion_tokens": completion_tokens,
+                        "total_tokens": total_tokens,
+                        "error": r.execution_error,
+                    }
+                )
 
         report_data["detailed_results"][model_name] = {"test_results": test_results}
 
@@ -140,9 +140,7 @@ def generate_comparison_report(
     return report_path, report_data
 
 
-def _calculate_classification(
-    report: Report, benchmark_type: str
-) -> tuple[int, int, int, int]:
+def _calculate_classification(report: Report, benchmark_type: str) -> tuple[int, int, int, int]:
     """Calculate TP, FP, FN, TN from validation details."""
     tp = fp = fn = tn = 0
 

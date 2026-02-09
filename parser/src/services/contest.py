@@ -216,4 +216,3 @@ class ContestService:
         identifier = self.url_parser.parse_contest_url(url)
 
         return await self.get_contest(identifier.contest_id)
-

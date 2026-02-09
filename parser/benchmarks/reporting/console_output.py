@@ -22,14 +22,16 @@ def print_comparison_table(
         display = display_names.get(model_name, model_name)
         accuracy = summary.pass_rate * 100
         avg_tokens = summary.total_tokens / summary.total if summary.total > 0 else 0.0
-        rows.append((
-            display,
-            accuracy,
-            summary.avg_latency_ms,
-            avg_tokens,
-            summary.total_tokens,
-            summary.total_cost_usd,
-        ))
+        rows.append(
+            (
+                display,
+                accuracy,
+                summary.avg_latency_ms,
+                avg_tokens,
+                summary.total_tokens,
+                summary.total_cost_usd,
+            )
+        )
 
     # Sort by accuracy desc, then cost asc
     rows.sort(key=lambda r: (-r[1], r[5] if r[5] > 0 else 1e9))
