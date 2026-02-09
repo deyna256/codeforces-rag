@@ -1,10 +1,8 @@
 """Async HTTP client with retry logic for fetching web content."""
 
-from typing import Optional
-
 from curl_cffi.requests import AsyncSession
 from tenacity import (
-    retry,
+    AsyncRetrying,
     stop_after_attempt,
     wait_exponential,
 )
@@ -14,13 +12,12 @@ from infrastructure.errors import NetworkError, ProblemNotFoundError
 
 
 class AsyncHTTPClient:
-    def __init__(self, timeout: Optional[int] = None, user_agent: Optional[str] = None):
+    def __init__(self, timeout: int | None = None):
         """
-        Initialize the client, falling back to configured timeout and user-agent when not provided.
+        Initialize the client, falling back to configured timeout when not provided.
         """
         settings = get_settings()
         self.timeout = timeout or 30  # Default timeout: 30 seconds
-        self.user_agent = user_agent or settings.user_agent or "codeforces-editorial-finder/1.0"
         self.retries = settings.http_retries
 
         # HTTP client using curl_cffi with browser impersonation
@@ -39,41 +36,42 @@ class AsyncHTTPClient:
             # Ignore cleanup errors to prevent breaking dependency injection
             pass
 
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        reraise=True,
-    )
     async def get(self, url: str):
         """
         Fetch a URL using curl_cffi with automatic retries and domain-specific error mapping.
 
         404 responses raise ProblemNotFoundError; other HTTP failures raise NetworkError.
         """
-        try:
-            # Use curl_cffi with Chrome 120 impersonation to bypass TLS fingerprinting
-            response = await self.client.get(
-                url,
-                timeout=self.timeout,
-                impersonate="chrome120",
-                allow_redirects=True,
-            )
+        async for attempt in AsyncRetrying(
+            stop=stop_after_attempt(self.retries),
+            wait=wait_exponential(multiplier=1, min=2, max=10),
+            reraise=True,
+        ):
+            with attempt:
+                try:
+                    # Use curl_cffi with Chrome 120 impersonation to bypass TLS fingerprinting
+                    response = await self.client.get(
+                        url,
+                        timeout=self.timeout,
+                        impersonate="chrome120",
+                        allow_redirects=True,
+                    )
 
-            # Check status code
-            if response.status_code == 404:
-                raise ProblemNotFoundError(f"Resource not found: {url}")
+                    # Check status code
+                    if response.status_code == 404:
+                        raise ProblemNotFoundError(f"Resource not found: {url}")
 
-            if response.status_code >= 400:
-                raise NetworkError(f"HTTP error {response.status_code}: {url}")
+                    if response.status_code >= 400:
+                        raise NetworkError(f"HTTP error {response.status_code}: {url}")
 
-            return response
+                    return response
 
-        except ProblemNotFoundError:
-            raise
-        except NetworkError:
-            raise
-        except Exception as e:
-            raise NetworkError(f"Failed to fetch {url}: {e}") from e
+                except ProblemNotFoundError:
+                    raise
+                except NetworkError:
+                    raise
+                except Exception as e:
+                    raise NetworkError(f"Failed to fetch {url}: {e}") from e
 
     async def get_text(self, url: str) -> str:
         """
