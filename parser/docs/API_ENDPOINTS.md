@@ -199,10 +199,9 @@ curl -X DELETE http://localhost:9000/cache
 
 The API can use LLMs (via OpenRouter) to intelligently find editorial links. See [LLM_EDITORIAL_DETECTION.md](./LLM_EDITORIAL_DETECTION.md) for details.
 
-To enable:
+Configure in `.env`:
 ```bash
 OPENROUTER_API_KEY=sk-or-v1-...
-LLM_ENABLED=true
 ```
 
 ---

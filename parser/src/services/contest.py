@@ -22,7 +22,7 @@ class ContestService:
         api_client: ContestAPIClientProtocol,
         page_parser: ContestPageParserProtocol,
         url_parser: type[URLParser] = URLParser,
-        editorial_parser: EditorialContentParser | None = None,
+        editorial_parser: EditorialContentParser,
     ):
         """Initialize service with dependencies."""
         self.api_client = api_client
@@ -89,7 +89,7 @@ class ContestService:
             logger.warning(f"Failed to parse {failed_count} problem(s) for contest {contest_id}")
 
         # Try to fetch editorial content and populate explanations
-        if self.editorial_parser and editorials:
+        if editorials:
             try:
                 # Build expected problems list: [(contest_id, letter), ...]
                 expected_problems = [

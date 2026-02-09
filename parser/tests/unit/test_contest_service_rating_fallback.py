@@ -45,7 +45,9 @@ async def test_uses_rating_from_standings_when_available():
         description="Test description", time_limit="1 second", memory_limit="256 MB"
     )
 
-    service = ContestService(api_client=api_client, page_parser=page_parser, editorial_parser=None)
+    service = ContestService(
+        api_client=api_client, page_parser=page_parser, editorial_parser=AsyncMock()
+    )
 
     # Execute
     contest = await service.get_contest("102")
@@ -98,7 +100,9 @@ async def test_falls_back_to_problemset_when_rating_missing():
         description="Test description", time_limit="1 second", memory_limit="256 MB"
     )
 
-    service = ContestService(api_client=api_client, page_parser=page_parser, editorial_parser=None)
+    service = ContestService(
+        api_client=api_client, page_parser=page_parser, editorial_parser=AsyncMock()
+    )
 
     # Execute
     contest = await service.get_contest("999")
@@ -139,7 +143,9 @@ async def test_handles_missing_rating_in_both_sources():
         description="Test description", time_limit="1 second", memory_limit="256 MB"
     )
 
-    service = ContestService(api_client=api_client, page_parser=page_parser, editorial_parser=None)
+    service = ContestService(
+        api_client=api_client, page_parser=page_parser, editorial_parser=AsyncMock()
+    )
 
     # Execute
     contest = await service.get_contest("888")

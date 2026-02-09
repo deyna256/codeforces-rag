@@ -22,15 +22,15 @@ class ContestPageParser:
 
     def __init__(
         self,
-        http_client: AsyncHTTPClient | None = None,
-        llm_editorial_finder: LLMEditorialFinder | None = None,
+        http_client: AsyncHTTPClient,
+        llm_editorial_finder: LLMEditorialFinder,
     ):
         """
         Initialize parser.
 
         Args:
             http_client: Async HTTP client instance
-            llm_editorial_finder: LLM-based editorial finder (optional)
+            llm_editorial_finder: LLM-based editorial finder
         """
         self.http_client = http_client
         self.llm_editorial_finder = llm_editorial_finder
@@ -43,9 +43,6 @@ class ContestPageParser:
         from domain.models.identifiers import ContestIdentifier
 
         url = URLParser.build_contest_url(ContestIdentifier(contest_id=contest_id))
-
-        if not self.http_client:
-            raise ParsingError(f"HTTP client not initialized for {url}")
 
         try:
             html = await self.http_client.get_text(url)
@@ -69,9 +66,6 @@ class ContestPageParser:
         """
         url = f"https://codeforces.com/contest/{contest_id}/problem/{problem_id}"
 
-        if not self.http_client:
-            raise ParsingError(f"HTTP client not initialized for {url}")
-
         try:
             html = await self.http_client.get_text(url)
             soup = BeautifulSoup(html, "lxml")
@@ -94,10 +88,6 @@ class ContestPageParser:
 
     async def _extract_editorial_url(self, soup: BeautifulSoup, contest_id: str) -> list[str]:
         """Extract editorial/tutorial URLs from contest page using LLM."""
-        if not self.llm_editorial_finder:
-            logger.warning(f"No LLM editorial finder available for contest {contest_id}")
-            return []
-
         try:
             return await self.llm_editorial_finder.find_editorial_url(soup, contest_id)
         except Exception:

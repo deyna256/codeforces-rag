@@ -14,8 +14,8 @@ class Settings(BaseSettings):
     log_level: str = Field(default="INFO", description="Logging level")
 
     # LLM (OpenRouter)
-    openrouter_api_key: str | None = Field(
-        default=None, description="OpenRouter API key for LLM-based editorial detection"
+    openrouter_api_key: str = Field(
+        description="OpenRouter API key for LLM-based editorial detection"
     )
     openrouter_model: str = Field(
         default="anthropic/claude-3.5-haiku",
@@ -25,10 +25,13 @@ class Settings(BaseSettings):
         default="https://openrouter.ai/api/v1",
         description="OpenRouter API base URL",
     )
-    llm_enabled: bool = Field(
-        default=True,
-        description="Enable LLM-based editorial detection (fallback to regex if disabled or fails)",
-    )
+
+    @field_validator("openrouter_api_key")
+    @classmethod
+    def validate_openrouter_api_key(cls, v: str) -> str:
+        if not v.startswith("sk-or-"):
+            raise ValueError("OPENROUTER_API_KEY must start with 'sk-or-'")
+        return v
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -55,5 +58,5 @@ def get_settings() -> Settings:
     """Get or create settings singleton instance."""
     global _settings
     if _settings is None:
-        _settings = Settings()
+        _settings = Settings()  # type: ignore[missing-argument]  # loaded from env
     return _settings

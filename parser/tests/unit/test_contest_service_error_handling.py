@@ -26,7 +26,9 @@ async def test_continues_when_page_parser_fails():
         description="Description", time_limit="1s", memory_limit="256MB"
     )
 
-    service = ContestService(api_client=api_client, page_parser=page_parser)
+    service = ContestService(
+        api_client=api_client, page_parser=page_parser, editorial_parser=AsyncMock()
+    )
 
     # Execute
     contest = await service.get_contest("1000")
@@ -69,7 +71,9 @@ async def test_continues_when_problem_parsing_fails():
 
     page_parser.parse_problem_in_contest.side_effect = parse_problem_side_effect
 
-    service = ContestService(api_client=api_client, page_parser=page_parser)
+    service = ContestService(
+        api_client=api_client, page_parser=page_parser, editorial_parser=AsyncMock()
+    )
 
     # Execute
     contest = await service.get_contest("2000")
@@ -107,7 +111,12 @@ async def test_get_contest_by_url_success():
         description="Description", time_limit="1s", memory_limit="256MB"
     )
 
-    service = ContestService(api_client=api_client, page_parser=page_parser, url_parser=url_parser)  # type: ignore[arg-type]
+    service = ContestService(
+        api_client=api_client,
+        page_parser=page_parser,
+        url_parser=url_parser,  # type: ignore[arg-type]
+        editorial_parser=AsyncMock(),
+    )
 
     # Execute
     contest = await service.get_contest_by_url("https://codeforces.com/contest/1500")

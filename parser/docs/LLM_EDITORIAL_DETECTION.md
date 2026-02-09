@@ -14,14 +14,12 @@ The Codeforces Editorial Finder can use Large Language Models (LLMs) to intellig
 
 1. **Link Extraction**: Parse contest page and extract relevant links
 2. **LLM Analysis**: Send links to LLM with context about what editorials look like
-3. **Fallback**: If LLM fails or is disabled, use regex-based detection
 
 ### Benefits
 
 - **Intelligent**: Understands context and patterns beyond simple keyword matching
 - **Multilingual**: Handles Russian terms like "Разбор задач"
 - **Flexible**: Works with any OpenRouter-compatible model
-- **Safe**: Automatic fallback to regex if LLM unavailable
 
 ## Configuration
 
@@ -43,9 +41,6 @@ OPENROUTER_MODEL=anthropic/claude-3.5-haiku
 
 # Optional: OpenRouter API URL (default: https://openrouter.ai/api/v1)
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-
-# Optional: Enable/disable LLM detection (default: true)
-LLM_ENABLED=true
 ```
 
 ### Supported Models
@@ -66,8 +61,6 @@ LLM calls are made only once per contest (when parsing editorial URL). Typical c
 
 ## Usage
 
-### With LLM Enabled
-
 ```bash
 # Set your API key
 export OPENROUTER_API_KEY="sk-or-v1-..."
@@ -75,22 +68,7 @@ export OPENROUTER_API_KEY="sk-or-v1-..."
 # Start the service
 docker compose up -d
 
-# Make request - LLM will be used
-curl -X POST http://localhost:9000/contest \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://codeforces.com/contest/2191"}'
-```
-
-### Without LLM (Fallback)
-
-```bash
-# Don't set API key, or disable LLM
-export LLM_ENABLED=false
-
-# Start the service
-docker compose up -d
-
-# Make request - regex fallback will be used
+# Make request
 curl -X POST http://localhost:9000/contest \
   -H "Content-Type: application/json" \
   -d '{"url": "https://codeforces.com/contest/2191"}'
@@ -117,8 +95,7 @@ The implementation follows clean architecture principles:
 │      Infrastructure Layer                │
 │  ┌─────────────────────────────────┐    │
 │  │   ContestPageParser             │    │
-│  │   ├─ LLMEditorialFinder ✨      │    │
-│  │   └─ Regex fallback             │    │
+│  │   └─ LLMEditorialFinder ✨      │    │
 │  └─────────────────────────────────┘    │
 │  ┌─────────────────────────────────┐    │
 │  │   OpenRouterClient              │    │
@@ -140,9 +117,7 @@ The implementation follows clean architecture principles:
    - Parses JSON response
 
 3. **`ContestPageParser`** (`infrastructure/parsers/contest_page_parser.py`)
-   - Orchestrates LLM + fallback
-   - Graceful degradation
-   - Maintains backward compatibility
+   - Orchestrates editorial detection via LLM
 
 ### Prompt Engineering
 
@@ -215,22 +190,13 @@ OPENROUTER_API_KEY="..." pytest tests/integration/test_contest_llm.py
 ### LLM Not Being Used
 
 1. Check API key is set: `echo $OPENROUTER_API_KEY`
-2. Check LLM is enabled: `echo $LLM_ENABLED`
-3. Check logs for errors
+2. Check logs for errors
 
 ### API Errors
 
 - **401 Unauthorized**: Invalid API key
 - **429 Rate Limit**: Too many requests
 - **Timeout**: Model taking too long (default: 30s)
-
-### Fallback Always Used
-
-This is normal behavior if:
-- No API key provided
-- LLM disabled in config
-- API request fails
-- LLM returns no result
 
 ## Future Improvements
 
