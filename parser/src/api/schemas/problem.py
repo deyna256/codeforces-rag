@@ -21,6 +21,3 @@ class ProblemResponse(BaseModel):
     rating: int | None = None
     tags: list[str]
     url: str  # Original URL
-
-    class Config:
-        from_attributes = True

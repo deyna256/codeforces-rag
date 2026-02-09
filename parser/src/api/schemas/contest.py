@@ -22,9 +22,6 @@ class ContestProblemResponse(BaseModel):
     memory_limit: str | None = None
     explanation: str | None = None
 
-    class Config:
-        from_attributes = True
-
 
 class ContestResponse(BaseModel):
     """Response containing contest information."""
@@ -33,6 +30,3 @@ class ContestResponse(BaseModel):
     title: str
     problems: list[ContestProblemResponse]
     editorials: list[str]
-
-    class Config:
-        from_attributes = True
