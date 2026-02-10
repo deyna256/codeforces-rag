@@ -7,7 +7,6 @@ from textual import work
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.widgets import DataTable, Footer, Header, LoadingIndicator, Static
-from textual.worker import Worker, WorkerState
 
 RAG_URL = os.environ.get("RAG_URL", "http://localhost:8000")
 CF_API_URL = "https://codeforces.com/api/contest.list"
@@ -40,7 +39,6 @@ class ContestLoaderApp(App):
     TITLE = "Codeforces Contest Loader"
     BINDINGS = [
         Binding("q", "quit", "Quit"),
-        Binding("enter", "load_contest", "Load contest", show=True),
         Binding("r", "refresh", "Refresh", show=True),
     ]
 
@@ -49,7 +47,6 @@ class ContestLoaderApp(App):
         self._contests: list[dict] = []
         self._loaded_ids: set[str] = set()
         self._loading_ids: set[str] = set()
-        self._worker_contest_map: dict[str, str] = {}
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -117,49 +114,33 @@ class ContestLoaderApp(App):
         self.sub_title = f"{len(self._contests)} contests, {len(self._loaded_ids)} loaded"
         table.focus()
 
-    def action_load_contest(self) -> None:
-        table = self.query_one(DataTable)
-        if table.cursor_row is None:
-            return
-        row_key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key
-        contest_id = str(row_key.value)
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        contest_id = str(event.row_key.value)
 
         if contest_id in self._loaded_ids or contest_id in self._loading_ids:
             return
 
         self._loading_ids.add(contest_id)
         self._update_row_status(contest_id, STATUS_LOADING)
-        worker = self._do_load_contest(contest_id)
-        self._worker_contest_map[worker.name] = contest_id
+        self._do_load_contest(contest_id)
 
     @work(thread=False)
     async def _do_load_contest(self, contest_id: str) -> None:
-        url = f"https://codeforces.com/contest/{contest_id}"
-        async with httpx.AsyncClient(timeout=120) as client:
-            response = await client.post(
-                f"{RAG_URL}/contests/load",
-                json={"contest_url": url},
-            )
-            response.raise_for_status()
-
-    def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
-        if event.worker.group == "fetch":
-            return
-
-        contest_id = self._worker_contest_map.get(event.worker.name)
-        if contest_id is None:
-            return
-
-        if event.state == WorkerState.SUCCESS:
+        try:
+            url = f"https://codeforces.com/contest/{contest_id}"
+            async with httpx.AsyncClient(timeout=120) as client:
+                response = await client.post(
+                    f"{RAG_URL}/contests/load",
+                    json={"contest_url": url},
+                )
+                response.raise_for_status()
             self._loading_ids.discard(contest_id)
             self._loaded_ids.add(contest_id)
             self._update_row_status(contest_id, STATUS_LOADED)
             self.sub_title = f"{len(self._contests)} contests, {len(self._loaded_ids)} loaded"
-            del self._worker_contest_map[event.worker.name]
-        elif event.state in (WorkerState.ERROR, WorkerState.CANCELLED):
+        except Exception:
             self._loading_ids.discard(contest_id)
             self._update_row_status(contest_id, STATUS_ERROR)
-            del self._worker_contest_map[event.worker.name]
 
     def _update_row_status(self, contest_id: str, status: str) -> None:
         table = self.query_one(DataTable)
