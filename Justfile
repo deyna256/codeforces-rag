@@ -36,6 +36,10 @@ type:
     @printf '\033[1;36m%s\033[0m\n' '● Type checking: rag'
     cd rag && uv run ty check
 
+# Launch TUI for loading contests
+tui:
+    set -a && . envs/.env.tui && set +a && cd tui && uv run python -m src.app
+
 # Format code (ruff format)
 format:
     @printf '\033[1;36m%s\033[0m\n' '● Formatting: parser'
