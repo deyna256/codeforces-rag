@@ -49,6 +49,11 @@ async def health():
     }
 
 
+@app.get("/contests/loaded")
+async def loaded_contests() -> list[str]:
+    return await db.get_loaded_contest_ids()
+
+
 @app.post("/contests/load")
 async def load_contest(body: LoadContestRequest):
     resp = await fetch_contest(body.contest_url)

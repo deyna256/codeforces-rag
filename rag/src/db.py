@@ -160,6 +160,13 @@ async def get_problems(
     ]
 
 
+async def get_loaded_contest_ids() -> list[str]:
+    assert pg_pool is not None
+    async with pg_pool.acquire() as conn:
+        rows = await conn.fetch("SELECT DISTINCT contest_id FROM problems ORDER BY contest_id")
+    return [r["contest_id"] for r in rows]
+
+
 async def get_problem_text(problem_id: str, field: str) -> dict | None:
     if field not in ("statement", "editorial"):
         return None

@@ -39,6 +39,31 @@ class TestHealth:
         assert data["qdrant"] is False
 
 
+class TestLoadedContests:
+    def test_returns_loaded_contest_ids(self, client):
+        with patch(
+            "src.api.db.get_loaded_contest_ids",
+            new_callable=AsyncMock,
+            return_value=["1920", "1921"],
+        ):
+            response = client.get("/contests/loaded")
+
+        data = response.json()
+        assert response.status_code == 200
+        assert data == ["1920", "1921"]
+
+    def test_returns_empty_list(self, client):
+        with patch(
+            "src.api.db.get_loaded_contest_ids",
+            new_callable=AsyncMock,
+            return_value=[],
+        ):
+            response = client.get("/contests/loaded")
+
+        assert response.status_code == 200
+        assert response.json() == []
+
+
 class TestLoadContest:
     def test_success_returns_contest_info(self, client):
         mock_resp = MagicMock()

@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 from src.db import (
     COLLECTION,
+    get_loaded_contest_ids,
     get_problem_text,
     get_problems,
     qdrant_search,
@@ -21,6 +22,28 @@ class TestUpsertProblem:
         assert args[1] == sample_problem.problem_id
         assert args[2] == sample_problem.contest_id
         assert args[3] == sample_problem.name
+
+
+class TestGetLoadedContestIds:
+    async def test_returns_contest_ids(self, mock_pg_conn):
+        mock_pg_conn.fetch.return_value = [
+            {"contest_id": "1920"},
+            {"contest_id": "1921"},
+        ]
+
+        result = await get_loaded_contest_ids()
+
+        assert result == ["1920", "1921"]
+        query = mock_pg_conn.fetch.call_args[0][0]
+        assert "DISTINCT contest_id" in query
+        assert "ORDER BY contest_id" in query
+
+    async def test_returns_empty_list_when_no_contests(self, mock_pg_conn):
+        mock_pg_conn.fetch.return_value = []
+
+        result = await get_loaded_contest_ids()
+
+        assert result == []
 
 
 class TestGetProblems:
@@ -128,9 +151,7 @@ class TestGetProblemText:
 
 
 class TestQdrantUpsertChunks:
-    def test_calls_upsert_with_correct_collection(
-        self, mock_qdrant_client, sample_chunk
-    ):
+    def test_calls_upsert_with_correct_collection(self, mock_qdrant_client, sample_chunk):
         qdrant_upsert_chunks([sample_chunk], [[0.1, 0.2]])
 
         call_kwargs = mock_qdrant_client.upsert.call_args.kwargs
@@ -179,9 +200,7 @@ class TestQdrantSearch:
 
     def test_no_filters_returns_results(self, mock_qdrant_client):
         mock_point = self._make_mock_point()
-        mock_qdrant_client.query_points.return_value = MagicMock(
-            points=[mock_point]
-        )
+        mock_qdrant_client.query_points.return_value = MagicMock(points=[mock_point])
 
         results = qdrant_search(vector=[0.1, 0.2])
 
@@ -216,9 +235,7 @@ class TestQdrantSearch:
     def test_skips_points_with_null_payload(self, mock_qdrant_client):
         mock_point = MagicMock()
         mock_point.payload = None
-        mock_qdrant_client.query_points.return_value = MagicMock(
-            points=[mock_point]
-        )
+        mock_qdrant_client.query_points.return_value = MagicMock(points=[mock_point])
 
         results = qdrant_search(vector=[0.1])
 
