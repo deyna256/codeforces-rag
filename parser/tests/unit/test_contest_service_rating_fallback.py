@@ -25,13 +25,7 @@ async def test_uses_rating_from_standings_when_available(api_client, page_parser
             ],
         }
     }
-    api_client.fetch_problemset_problems.return_value = {
-        "result": {
-            "problems": [
-                {"contestId": 102, "index": "A", "rating": 1200, "tags": ["brute force"]},
-            ]
-        }
-    }
+
     page_parser.parse_contest_page.return_value = MagicMock(editorial_urls=[])
     page_parser.parse_problem_in_contest.return_value = MagicMock(
         description="Test description", time_limit="1 second", memory_limit="256 MB"
@@ -52,47 +46,7 @@ async def test_uses_rating_from_standings_when_available(api_client, page_parser
 
 
 @pytest.mark.asyncio
-async def test_falls_back_to_problemset_when_rating_missing(
-    api_client, page_parser, editorial_parser
-):
-    api_client.fetch_contest_standings.return_value = {
-        "result": {
-            "contest": {"name": "Contest 999", "type": "CF"},
-            "problems": [
-                {
-                    "index": "A",
-                    "name": "Problem A",
-                },
-            ],
-        }
-    }
-    api_client.fetch_problemset_problems.return_value = {
-        "result": {
-            "problems": [
-                {"contestId": 999, "index": "A", "rating": 1500, "tags": ["math"]},
-            ]
-        }
-    }
-    page_parser.parse_contest_page.return_value = MagicMock(editorial_urls=[])
-    page_parser.parse_problem_in_contest.return_value = MagicMock(
-        description="Test description", time_limit="1 second", memory_limit="256 MB"
-    )
-
-    service = ContestService(
-        api_client=api_client, page_parser=page_parser, editorial_parser=editorial_parser
-    )
-    contest = await service.get_contest("999")
-
-    assert len(contest.problems) == 1
-    problem_a = contest.problems[0]
-    assert problem_a.rating == 1500
-    assert problem_a.tags == ["math"]
-
-
-@pytest.mark.asyncio
-async def test_handles_missing_rating_in_both_sources(
-    api_client, page_parser, editorial_parser
-):
+async def test_handles_missing_rating_in_standings(api_client, page_parser, editorial_parser):
     api_client.fetch_contest_standings.return_value = {
         "result": {
             "contest": {"name": "Contest 888", "type": "CF"},
@@ -104,7 +58,6 @@ async def test_handles_missing_rating_in_both_sources(
             ],
         }
     }
-    api_client.fetch_problemset_problems.return_value = {"result": {"problems": []}}
     page_parser.parse_contest_page.return_value = MagicMock(editorial_urls=[])
     page_parser.parse_problem_in_contest.return_value = MagicMock(
         description="Test description", time_limit="1 second", memory_limit="256 MB"

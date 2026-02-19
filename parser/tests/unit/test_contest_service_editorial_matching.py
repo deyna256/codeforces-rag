@@ -16,14 +16,7 @@ def _setup_two_problem_contest(api_client, page_parser, editorial_parser, editor
             ],
         }
     }
-    api_client.fetch_problemset_problems.return_value = {
-        "result": {
-            "problems": [
-                {"contestId": 1900, "index": "A", "rating": 1200, "tags": []},
-                {"contestId": 1900, "index": "B", "rating": 1400, "tags": []},
-            ]
-        }
-    }
+
     page_parser.parse_contest_page.return_value = MagicMock(
         editorial_urls=["http://example.com/editorial"]
     )
@@ -91,11 +84,7 @@ async def test_skips_editorials_from_other_contests(api_client, page_parser, edi
             "problems": [{"index": "A", "name": "Problem A"}],
         }
     }
-    api_client.fetch_problemset_problems.return_value = {
-        "result": {
-            "problems": [{"contestId": 1900, "index": "A", "rating": 1200, "tags": []}]
-        }
-    }
+
     page_parser.parse_contest_page.return_value = MagicMock(
         editorial_urls=["http://example.com/editorial"]
     )

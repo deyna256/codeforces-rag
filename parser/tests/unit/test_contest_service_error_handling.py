@@ -14,7 +14,7 @@ async def test_continues_when_page_parser_fails(api_client, page_parser, editori
             ],
         }
     }
-    api_client.fetch_problemset_problems.return_value = {"result": {"problems": []}}
+
     page_parser.parse_contest_page.side_effect = Exception("Network error")
     page_parser.parse_problem_in_contest.return_value = MagicMock(
         description="Description", time_limit="1s", memory_limit="256MB"
@@ -43,7 +43,7 @@ async def test_continues_when_problem_parsing_fails(api_client, page_parser, edi
             ],
         }
     }
-    api_client.fetch_problemset_problems.return_value = {"result": {"problems": []}}
+
     page_parser.parse_contest_page.return_value = MagicMock(editorial_urls=[])
     page_parser.parse_problem_in_contest.side_effect = [
         MagicMock(description="Description A", time_limit="1s", memory_limit="256MB"),
@@ -73,7 +73,7 @@ async def test_get_contest_by_url_success(api_client, page_parser, editorial_par
             "problems": [{"index": "A", "name": "Problem A", "rating": 800, "tags": ["math"]}],
         }
     }
-    api_client.fetch_problemset_problems.return_value = {"result": {"problems": []}}
+
     page_parser.parse_contest_page.return_value = MagicMock(editorial_urls=[])
     page_parser.parse_problem_in_contest.return_value = MagicMock(
         description="Description", time_limit="1s", memory_limit="256MB"
@@ -100,7 +100,7 @@ async def test_continues_when_editorial_parsing_fails(api_client, page_parser, e
             "problems": [{"index": "A", "name": "Problem A", "rating": 800, "tags": ["math"]}],
         }
     }
-    api_client.fetch_problemset_problems.return_value = {"result": {"problems": []}}
+
     page_parser.parse_contest_page.return_value = MagicMock(
         editorial_urls=["https://codeforces.com/blog/entry/12345"]
     )
