@@ -43,17 +43,6 @@ class ContestService:
         # Get contest title from API
         contest_title = contest_data.get("name", f"Contest {contest_id}")
 
-        # Fetch problemset.problems for ratings and tags
-        logger.debug("Fetching problemset.problems for ratings and tags")
-        problemset_data = await self.api_client.fetch_problemset_problems()
-        all_problems = problemset_data.get("result", {}).get("problems", [])
-
-        # Create a map for quick lookup: (contestId, index) -> problem data
-        problem_map = {}
-        for problem in all_problems:
-            key = (str(problem.get("contestId")), problem.get("index"))
-            problem_map[key] = problem
-
         # Parse contest page for editorial URL
         contest_page_data = None
         try:
@@ -70,7 +59,7 @@ class ContestService:
         for problem_data in problems_list:
             problem_id = problem_data.get("index")
             problem_tasks.append(
-                self._fetch_problem_details(contest_id, problem_id, problem_data, problem_map)
+                self._fetch_problem_details(contest_id, problem_id, problem_data)
             )
 
         problem_results = await asyncio.gather(*problem_tasks, return_exceptions=True)
@@ -150,23 +139,11 @@ class ContestService:
         contest_id: str,
         problem_id: str,
         api_problem_data: dict,
-        problem_map: dict,
     ) -> ContestProblem | None:
         """Fetch detailed information for a single problem."""
         try:
-            # Try to get rating and tags from contest.standings first (api_problem_data)
-            # If not available, fall back to problemset.problems
             rating = api_problem_data.get("rating")
             tags = api_problem_data.get("tags", [])
-
-            # Fallback to problemset.problems if not in standings
-            if rating is None or not tags:
-                key = (contest_id, problem_id)
-                problem_metadata = problem_map.get(key, {})
-                if rating is None:
-                    rating = problem_metadata.get("rating")
-                if not tags:
-                    tags = problem_metadata.get("tags", [])
 
             # Get problem name from API data
             problem_title = api_problem_data.get("name", f"Problem {problem_id}")
