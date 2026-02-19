@@ -27,7 +27,7 @@ qdrant: QdrantClient | None = None
 
 async def init_pg() -> asyncpg.Pool:
     global pg_pool
-    pg_pool = await asyncpg.create_pool(settings.POSTGRES_URL)
+    pg_pool = await asyncpg.create_pool(settings.POSTGRES_URL, min_size=1, max_size=3)
     async with pg_pool.acquire() as conn:
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS problems (
