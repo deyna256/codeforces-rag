@@ -46,3 +46,25 @@ class TestFetchContest:
         with patch("src.parser_client.httpx.AsyncClient", return_value=mock_client):
             with pytest.raises(httpx.HTTPStatusError):
                 await fetch_contest("https://codeforces.com/contest/9999")
+
+    async def test_connection_error_propagates(self):
+        mock_client = AsyncMock()
+        mock_client.__aenter__.return_value = mock_client
+        mock_client.post.side_effect = ConnectionError("Connection refused")
+
+        with patch("src.parser_client.httpx.AsyncClient", return_value=mock_client):
+            with pytest.raises(ConnectionError):
+                await fetch_contest("https://codeforces.com/contest/1920")
+
+    async def test_invalid_json_response_raises_validation_error(self):
+        mock_response = MagicMock()
+        mock_response.raise_for_status.return_value = None
+        mock_response.json.return_value = {"unexpected": "structure"}
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__.return_value = mock_client
+        mock_client.post.return_value = mock_response
+
+        with patch("src.parser_client.httpx.AsyncClient", return_value=mock_client):
+            with pytest.raises(Exception):
+                await fetch_contest("https://codeforces.com/contest/1920")

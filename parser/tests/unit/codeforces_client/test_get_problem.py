@@ -115,11 +115,11 @@ async def test_get_problem_network_error_propagates(
     codeforces_client: CodeforcesApiClient,
     mock_http_client: AsyncMock,
 ) -> None:
-    mock_http_client.get.side_effect = Exception("Network failure")
+    mock_http_client.get.side_effect = ConnectionError("Network failure")
 
     identifier = ProblemIdentifier(contest_id="1000", problem_id="A")
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(ConnectionError) as exc_info:
         await codeforces_client.get_problem(identifier)
 
     assert "Network failure" in str(exc_info.value)

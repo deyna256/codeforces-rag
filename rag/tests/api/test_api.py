@@ -1,4 +1,7 @@
+import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import httpx
 
 from src.models import ProblemListItem
 
@@ -91,6 +94,22 @@ class TestLoadContest:
         assert data["contest"] == "Codeforces Round 920"
         assert data["problems_loaded"] == 3
 
+    def test_fetch_contest_error_propagates(self, client):
+        with patch(
+            "src.api.fetch_contest",
+            new_callable=AsyncMock,
+            side_effect=httpx.HTTPStatusError(
+                "Not Found",
+                request=MagicMock(),
+                response=MagicMock(status_code=404),
+            ),
+        ):
+            with pytest.raises(httpx.HTTPStatusError):
+                client.post(
+                    "/contests/load",
+                    json={"contest_url": "https://codeforces.com/contest/9999"},
+                )
+
 
 class TestSearch:
     def test_returns_search_results(self, client):
@@ -122,7 +141,7 @@ class TestSearch:
             patch("src.api.embed_texts", return_value=[[0.1]]),
             patch("src.api.db.qdrant_search", return_value=[]) as mock_search,
         ):
-            client.post(
+            response = client.post(
                 "/search",
                 json={
                     "query": "dp",
@@ -134,12 +153,19 @@ class TestSearch:
                 },
             )
 
+        assert response.status_code == 200
+        assert response.json() == []
         call_kwargs = mock_search.call_args.kwargs
         assert call_kwargs["rating_min"] == 1000
         assert call_kwargs["rating_max"] == 2000
         assert call_kwargs["tags"] == ["dp"]
         assert call_kwargs["chunk_type"] == "editorial"
         assert call_kwargs["limit"] == 5
+
+    def test_embedding_failure_propagates(self, client):
+        with patch("src.api.embed_texts", side_effect=RuntimeError("OpenAI unavailable")):
+            with pytest.raises(RuntimeError):
+                client.post("/search", json={"query": "dp problems"})
 
 
 class TestListProblems:
@@ -172,7 +198,7 @@ class TestListProblems:
             new_callable=AsyncMock,
             return_value=[],
         ) as mock_get:
-            client.get(
+            response = client.get(
                 "/problems",
                 params={
                     "rating_min": 1000,
@@ -181,18 +207,27 @@ class TestListProblems:
                 },
             )
 
+        assert response.status_code == 200
+        assert response.json() == []
         call_kwargs = mock_get.call_args.kwargs
         assert call_kwargs["rating_min"] == 1000
         assert call_kwargs["contest_id"] == "1920"
         assert call_kwargs["limit"] == 10
 
 
-class TestProblemStatement:
-    def test_found_returns_text(self, client):
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/problems/1920A/statement",
+        "/problems/1920A/editorial",
+    ],
+)
+class TestProblemText:
+    def test_found_returns_text(self, client, path):
         result = {
             "problem_id": "1920A",
             "name": "Test",
-            "text": "Problem statement content",
+            "text": "Content",
         }
 
         with patch(
@@ -200,48 +235,20 @@ class TestProblemStatement:
             new_callable=AsyncMock,
             return_value=result,
         ):
-            response = client.get("/problems/1920A/statement")
+            response = client.get(path)
 
         data = response.json()
         assert response.status_code == 200
-        assert data["text"] == "Problem statement content"
+        assert data["text"] == "Content"
 
-    def test_not_found_returns_404(self, client):
+    def test_not_found_returns_404(self, client, path):
+        not_found_path = path.replace("1920A", "999Z")
+
         with patch(
             "src.api.db.get_problem_text",
             new_callable=AsyncMock,
             return_value=None,
         ):
-            response = client.get("/problems/999Z/statement")
-
-        assert response.status_code == 404
-
-
-class TestProblemEditorial:
-    def test_found_returns_text(self, client):
-        result = {
-            "problem_id": "1920A",
-            "name": "Test",
-            "text": "Editorial explanation",
-        }
-
-        with patch(
-            "src.api.db.get_problem_text",
-            new_callable=AsyncMock,
-            return_value=result,
-        ):
-            response = client.get("/problems/1920A/editorial")
-
-        data = response.json()
-        assert response.status_code == 200
-        assert data["text"] == "Editorial explanation"
-
-    def test_not_found_returns_404(self, client):
-        with patch(
-            "src.api.db.get_problem_text",
-            new_callable=AsyncMock,
-            return_value=None,
-        ):
-            response = client.get("/problems/999Z/editorial")
+            response = client.get(not_found_path)
 
         assert response.status_code == 404

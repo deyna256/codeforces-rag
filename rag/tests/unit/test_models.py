@@ -1,7 +1,6 @@
 from src.models import (
     Chunk,
     ParserProblem,
-    ParserResponse,
     Problem,
     ProblemListItem,
     SearchRequest,
@@ -19,13 +18,6 @@ class TestParserProblem:
         assert p.time_limit == ""
         assert p.memory_limit == ""
         assert p.explanation is None
-
-
-class TestParserResponse:
-    def test_empty_problems_list(self):
-        r = ParserResponse(contest_id="1", title="Round", problems=[])
-
-        assert r.problems == []
 
 
 class TestProblem:
@@ -84,7 +76,7 @@ class TestProblemListItem:
 
 
 class TestChunk:
-    def test_creation(self):
+    def test_optional_fields_default_correctly(self):
         c = Chunk(
             problem_id="1A",
             name="Test",

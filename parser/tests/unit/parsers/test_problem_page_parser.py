@@ -23,7 +23,7 @@ REALISTIC_HTML = """
 </html>
 """
 
-SAMPLE_HTML_NO_EDITORIAL = """
+SAMPLE_HTML_WITHOUT_TITLE = """
 <html>
     <div class="problem-statement">
         <div class="header">
@@ -38,21 +38,16 @@ SAMPLE_HTML_NO_EDITORIAL = """
 """
 
 
-@pytest.fixture
-def mock_http_client() -> AsyncMock:
+@pytest.mark.asyncio
+async def test_parse_successful() -> None:
     client = AsyncMock()
     client.get_text.return_value = REALISTIC_HTML
-    return client
-
-
-@pytest.mark.asyncio
-async def test_parse_successful(mock_http_client) -> None:
     identifier = ProblemIdentifier(
         contest_id="2183",
         problem_id="A",
     )
 
-    parser = ProblemPageParser(mock_http_client)
+    parser = ProblemPageParser(client)
     data = await parser.parse_problem_page(identifier=identifier)
 
     assert data.time_limit == "2 seconds"
@@ -62,9 +57,9 @@ async def test_parse_successful(mock_http_client) -> None:
 
 
 @pytest.mark.asyncio
-async def test_parse_no_editorial() -> None:
+async def test_parse_problem_page_without_title_in_header() -> None:
     client = AsyncMock()
-    client.get_text.return_value = SAMPLE_HTML_NO_EDITORIAL
+    client.get_text.return_value = SAMPLE_HTML_WITHOUT_TITLE
     identifier = ProblemIdentifier(
         contest_id="9999",
         problem_id="B",
@@ -79,11 +74,11 @@ async def test_parse_no_editorial() -> None:
 
 
 @pytest.mark.asyncio
-async def test_http_error_handling() -> None:
+async def test_http_error_raises_parsing_error() -> None:
     client = AsyncMock()
     client.get_text.side_effect = Exception("Network Error")
     identifier = ProblemIdentifier(contest_id="1234", problem_id="A")
+    parser = ProblemPageParser(client)
 
     with pytest.raises(ParsingError):
-        parser = ProblemPageParser(client)
         await parser.parse_problem_page(identifier=identifier)

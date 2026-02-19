@@ -37,3 +37,9 @@ class TestEmbedTexts:
         result = embed_texts(["a", "b", "c"])
 
         assert result == expected
+
+    def test_empty_input_returns_empty_list(self, mock_openai_client):
+        result = embed_texts([])
+
+        assert result == []
+        mock_openai_client.embeddings.create.assert_not_called()

@@ -112,7 +112,7 @@ End"""
         assert r"\leq" in result[("2189", "A")]
         assert r"\times" in result[("2189", "A")]
 
-    def test_sanitize_json_preserves_valid_escapes(self, parser):
+    def test_parse_llm_response_preserves_valid_escape_sequences(self, parser):
         """Test that valid JSON escape sequences are preserved in markers."""
         editorial_text = """Start of problem A
 Line 1

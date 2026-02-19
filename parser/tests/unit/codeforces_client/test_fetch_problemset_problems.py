@@ -17,9 +17,6 @@ async def test_fetch_problemset_problems_success(
     result = await codeforces_client.fetch_problemset_problems()
 
     assert result == sample_problemset_response
-    assert result["status"] == "OK"
-    assert "problems" in result["result"]
-    assert len(result["result"]["problems"]) == 3
 
 
 @pytest.mark.asyncio
@@ -55,9 +52,9 @@ async def test_fetch_problemset_problems_http_error(
     codeforces_client: CodeforcesApiClient,
     mock_http_client: AsyncMock,
 ) -> None:
-    mock_http_client.get.side_effect = Exception("Connection error")
+    mock_http_client.get.side_effect = ConnectionError("Connection error")
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(ConnectionError) as exc_info:
         await codeforces_client.fetch_problemset_problems()
 
     assert "Connection error" in str(exc_info.value)

@@ -17,11 +17,6 @@ async def test_fetch_contest_standings_success(
     result = await codeforces_client.fetch_contest_standings("1000")
 
     assert result == sample_contest_standings_response
-    assert result["status"] == "OK"
-    assert "contest" in result["result"]
-    assert "problems" in result["result"]
-    assert result["result"]["contest"]["id"] == 1000
-    assert len(result["result"]["problems"]) == 2
 
 
 @pytest.mark.asyncio
@@ -72,9 +67,9 @@ async def test_fetch_contest_standings_http_error(
     codeforces_client: CodeforcesApiClient,
     mock_http_client: AsyncMock,
 ) -> None:
-    mock_http_client.get.side_effect = Exception("Connection timeout")
+    mock_http_client.get.side_effect = ConnectionError("Connection timeout")
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(ConnectionError) as exc_info:
         await codeforces_client.fetch_contest_standings("1000")
 
     assert "Connection timeout" in str(exc_info.value)
